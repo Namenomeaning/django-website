@@ -19,4 +19,4 @@ sudo docker run hello-world
 git config --global user.name "ahkwang"
 git config --global user.email "pvaquang@gmail.com"
 
-git clone 
+git clone https://github.com/Namenomeaning/django-website.git
