@@ -6,17 +6,34 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib import messages
 from django.conf import settings
+from django.core.cache import cache
+import io
+import logging
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 def home_view(request):
-    products=models.Product.objects.all()
+    # Try to get products from cache
+    products = cache.get('all_products')
+    if products is None:
+        logger.info("Cache MISS for 'all_products' - Loading from database")
+        products = models.Product.objects.all()
+        cache.set('all_products', products, 900)
+    else:
+        logger.info("Cache HIT for 'all_products' - Using cached data")
+        
     if 'product_ids' in request.COOKIES:
         product_ids = request.COOKIES['product_ids']
         counter=product_ids.split('|')
         product_count_in_cart=len(set(counter))
     else:
         product_count_in_cart=0
-    if request.user.is_authenticated:
-        return HttpResponseRedirect('afterlogin')
+    
+    # Remove this redirect so products are always shown
+    # if request.user.is_authenticated:
+    #     return HttpResponseRedirect('afterlogin')
+    
     return render(request,'ecom/index.html',{'products':products,'product_count_in_cart':product_count_in_cart})
 
 
@@ -125,7 +142,14 @@ def update_customer_view(request,pk):
 # admin view the product
 @login_required(login_url='adminlogin')
 def admin_products_view(request):
-    products=models.Product.objects.all()
+    # Try to get products from cache
+    products = cache.get('admin_all_products')
+    if products is None:
+        logger.info("Cache MISS for 'admin_all_products' - Loading from database")
+        products = models.Product.objects.all()
+        cache.set('admin_all_products', products, 900)
+    else:
+        logger.info("Cache HIT for 'admin_all_products' - Using cached data")
     return render(request,'ecom/admin_products.html',{'products':products})
 
 
@@ -136,7 +160,11 @@ def admin_add_product_view(request):
     if request.method=='POST':
         productForm=forms.ProductForm(request.POST, request.FILES)
         if productForm.is_valid():
-            productForm.save()
+            product = productForm.save()
+            # Invalidate cache when a product is added
+            logger.info(f"Invalidating cache due to new product: {product.name}")
+            cache.delete('all_products')
+            cache.delete('admin_all_products')
         return HttpResponseRedirect('admin-products')
     return render(request,'ecom/admin_add_products.html',{'productForm':productForm})
 
@@ -144,7 +172,12 @@ def admin_add_product_view(request):
 @login_required(login_url='adminlogin')
 def delete_product_view(request,pk):
     product=models.Product.objects.get(id=pk)
+    product_name = product.name
     product.delete()
+    # Invalidate cache when a product is deleted
+    logger.info(f"Invalidating cache due to deleted product: {product_name}")
+    cache.delete('all_products')
+    cache.delete('admin_all_products')
     return redirect('admin-products')
 
 
@@ -155,7 +188,11 @@ def update_product_view(request,pk):
     if request.method=='POST':
         productForm=forms.ProductForm(request.POST,request.FILES,instance=product)
         if productForm.is_valid():
-            productForm.save()
+            updated_product = productForm.save()
+            # Invalidate cache when a product is updated
+            logger.info(f"Invalidating cache due to updated product: {updated_product.name}")
+            cache.delete('all_products')
+            cache.delete('admin_all_products')
             return redirect('admin-products')
     return render(request,'ecom/admin_update_product.html',{'productForm':productForm})
 
@@ -330,7 +367,15 @@ def send_feedback_view(request):
 @login_required(login_url='customerlogin')
 @user_passes_test(is_customer)
 def customer_home_view(request):
-    products=models.Product.objects.all()
+    # Try to get products from cache
+    products = cache.get('all_products')
+    if products is None:
+        logger.info("Cache MISS for 'all_products' in customer home - Loading from database")
+        products = models.Product.objects.all()
+        cache.set('all_products', products, 900)
+    else:
+        logger.info("Cache HIT for 'all_products' in customer home - Using cached data")
+        
     if 'product_ids' in request.COOKIES:
         product_ids = request.COOKIES['product_ids']
         counter=product_ids.split('|')

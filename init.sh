@@ -23,4 +23,7 @@
 
   cd django-website
 
-  sudo docker compose up -d --build web
+  sudo docker compose up -d --build 
+
+  # create super user 
+  docker exec -it ecommerce-web-1 python manage.py createsuperuser
