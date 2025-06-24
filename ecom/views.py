@@ -156,15 +156,25 @@ def admin_products_view(request):
 # admin add product by clicking on floating button
 @login_required(login_url='adminlogin')
 def admin_add_product_view(request):
-    productForm=forms.ProductForm()
-    if request.method=='POST':
-        productForm=forms.ProductForm(request.POST, request.FILES)
+    logger.info("Entered admin_add_product_view; method=%s", request.method)
+    productForm = forms.ProductForm()
+    if request.method == 'POST':
+        productForm = forms.ProductForm(request.POST, request.FILES)
         if productForm.is_valid():
-            product = productForm.save()
-            # Invalidate cache when a product is added
-            logger.info(f"Invalidating cache due to new product: {product.name}")
-            cache.delete('all_products')
-            cache.delete('admin_all_products')
+            try:
+                product = productForm.save()
+                # Log successful save and image URL for S3 connectivity check
+                logger.info("Product added: %s", product.name)
+                if product.product_image:
+                    logger.info("Product image URL: %s", product.product_image.url)
+                # Invalidate cache when a product is added
+                logger.info("Invalidating cache due to new product: %s", product.name)
+                cache.delete('all_products')
+                cache.delete('admin_all_products')
+            except Exception as e:
+                logger.error("Error saving product or uploading to S3: %s", e, exc_info=True)
+                messages.error(request, "Error uploading product; check logs for details.")
+                return render(request, 'ecom/admin_add_products.html', {'productForm': productForm})
         return HttpResponseRedirect('admin-products')
     return render(request,'ecom/admin_add_products.html',{'productForm':productForm})
 

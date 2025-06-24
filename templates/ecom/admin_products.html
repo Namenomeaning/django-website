@@ -66,7 +66,13 @@ facebook : fb.com/sumit.luv
 
       <tr>
         <td> {{p.name}}</td>
-        <td> <img src="{% static p.product_image.url %}" alt="Profile Pic" height="40px" width="40px" /></td>
+        <td> 
+          {% if p.product_image %}
+            <img src="{{ p.product_image.url }}" alt="Profile Pic" height="40px" width="40px" />
+          {% else %}
+            <img src="{% static 'images/no-image.png' %}" alt="no image" height="40px" width="40px" />
+          {% endif %}
+        </td>
         <td>{{p.price}}</td>
         <td>{{p.description}}</td>
         <td><a class="btn btn-primary btn-xs" href="{% url 'update-product' p.id  %}"><span class="glyphicon glyphicon-edit"></span></a></td>

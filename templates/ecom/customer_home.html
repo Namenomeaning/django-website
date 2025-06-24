@@ -326,7 +326,11 @@ body {
           <div class="row">
             <div class="el-wrapper">
               <div class="box-up">
-                <img class="img" src="{% static p.product_image.url %}" alt="product pic" height="300px" width="300px">
+                {% if p.product_image %}
+                  <img class="img" src="{{ p.product_image.url }}" alt="product pic" height="300px" width="300px">
+                {% else %}
+                  <img class="img" src="{% static 'images/no-image.png' %}" alt="no image" height="300px" width="300px">
+                {% endif %}
                 <div class="img-info">
                   <div class="info-inner">
                     <span style="background-color:#08050a; color:yellow;" class="p-company">{{p.name}}</span>

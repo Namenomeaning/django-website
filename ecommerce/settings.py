@@ -15,7 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_DIR = os.path.join(BASE_DIR,'templates')
-STATIC_DIR=os.path.join(BASE_DIR,'static')
 
 
 # Quick-start development settings - unsuitable for production
@@ -39,9 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
     'ecom',
     'widget_tweaks',
-    'storages',                   # add this
+
 ]
 
 MIDDLEWARE = [
@@ -79,14 +79,22 @@ WSGI_APPLICATION = 'ecommerce.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get('POSTGRES_DB'),
+#         'USER': os.environ.get('POSTGRES_USER'),
+#         'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+#         'HOST': os.environ.get('DB_HOST'),
+#         'PORT': os.environ.get('DB_PORT'),
+#     }
+# }
+
+#sqlite database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB'),
-        'USER': os.environ.get('POSTGRES_USER'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        'HOST': os.environ.get('DB_HOST'),
-        'PORT': os.environ.get('DB_PORT'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -127,18 +135,30 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
-# AWS S3 configuration
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = 'e-commerce-django-static-bucket'
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400',
-}
+# s3 storage settings
 
-# Tell Django to use S3 for static files
+STATIC_DIR=os.path.join(BASE_DIR,'static')
+
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS=[STATIC_DIR,]
+
+MEDIA_ROOT=os.path.join(BASE_DIR,'static')
+
+AWS_ACCESS_KEY_ID      = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY  = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = 'e-commerce-django-static-bucket'
+AWS_S3_REGION_NAME     = os.environ.get('AWS_REGION', 'us-east-1')
+# AWS_S3_SIGNATURE_VERSION = 's3v4'
+# AWS_S3_FILE_OVERWRITE = False
+# AWS_DEFAULT_ACL = 'public-read'
+# AWS_S3_VERIFY = True
+
+# S3 static settings
+STATICFILES_LOCATION = 'static'
+STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/{STATICFILES_LOCATION}/'
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 LOGIN_REDIRECT_URL='/afterlogin'
 

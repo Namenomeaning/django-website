@@ -164,7 +164,11 @@
             <tr>
               <td>
                 Product Image :<br>
-                 <img src="{% static product_image.url %}" alt="Profile Pic" height="40px" width="40px" /><br><br>
+                {% if product_image %}
+                  <img src="{{ product_image.url }}" alt="Profile Pic" height="40px" width="40px" /><br><br>
+                {% else %}
+                  <img src="{% static 'images/no-image.png' %}" alt="no image" height="40px" width="40px" /><br><br>
+                {% endif %}
                 Product Price : <br>
                 {{productPrice}}
               </td>

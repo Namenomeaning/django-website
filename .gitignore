@@ -5,5 +5,7 @@
 __pycache__
 db.sqlite3
 .env
-
+.python-version
+pyproject.toml
 *.pem
+uv.lock

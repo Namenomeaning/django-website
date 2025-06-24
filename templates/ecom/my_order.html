@@ -172,7 +172,13 @@ p {
                 <li class="col-md-4">
                   <figure class="itemside mb-3">
                     {%for product in products%}
-                      <div class="aside"><img src="{% static product.product_image.url %}" class="img-sm border"></div>
+                      <div class="aside">
+                        {% if product.product_image %}
+                          <img src="{{ product.product_image.url }}" class="img-sm border">
+                        {% else %}
+                          <img src="{% static 'images/no-image.png' %}" class="img-sm border">
+                        {% endif %}
+                      </div>
                       <figcaption class="info align-self-center">
 
                           <p class="title"><strong>Name : </strong>{{product.name}} <br> <strong>Description : </strong>{{product.description}}</p> <span class="text-muted"><strong>Price : </strong>{{product.price}} </span>
