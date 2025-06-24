@@ -155,10 +155,14 @@ EMAIL_RECEIVING_USER = ['to@gmail.com'] # email on which you will receive messag
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', '6379')}/{os.environ.get('REDIS_DB', '1')}",
+        'LOCATION': f"rediss://{os.environ.get('REDIS_HOST')}:{os.environ.get('REDIS_PORT')}/{os.environ.get('REDIS_DB')}",
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            # 'PASSWORD': os.environ.get('REDIS_PASSWORD', ''),  # uncomment if using password
+            # ensure TLS
+            'CONNECTION_POOL_KWARGS': {
+                'ssl_cert_reqs': None,    # or 'required' if you have valid certs
+            },
+            # 'PASSWORD': os.environ.get('REDIS_PASSWORD', ''),
         }
     }
 }
